@@ -4,8 +4,7 @@
 [Script]
 # Panel
 # ⬇️ IMPORTANT: Add your API keys here ⬇️
-ip-score-panel = type=generic,timeout=60,script-path=https://raw.githubusercontent.com/boopthehog/silver-pancake/refs/heads/main/Surge/scripts/ip-score.js,argument=icon=info.circle.fill&icon-color=#5d84f8&ipqs_key=YF36zITmahakuD3VDJozrUXZYe24yJ4U
-
+ip-score-panel = type=generic,timeout=60,script-path=https://raw.githubusercontent.com/boopthehog/silver-pancake/refs/heads/main/Surge/scripts/ip-score.js,argument=icon=info.circle.fill,icon-color=#5d84f8,ipqs_key=YF36zITmahakuD3VDJozrUXZYe24yJ4U
 # To enable Scamalytics, get an API key and add "&scamalytics_key=YOUR_KEY" to the argument above.
 
 [Panel]
