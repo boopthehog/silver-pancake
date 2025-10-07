@@ -63,7 +63,9 @@ let content = ''
         ipqsResult.push(`🛡️ VPN³: ${ipqsInfo.vpn}`);
         ipqsResult.push(`🧅 TOR³: ${ipqsInfo.tor}`);
         ipqsResult.push(`🌐 ISP³: ${ipqsInfo.ISP || '-'}`);
-        ipqsResult.push(`🔌 TYPE³: ${ipqsInfo.connection_type || '-'}`);
+        ipqsResult.push(`#️⃣ ASN³: ${ipqsInfo.ASN || '-'}`);
+        ipqsResult.push(`🧭 LATITUDE³: ${ipqsInfo.latitude || 'N/A'}`);
+        ipqsResult.push(`🧭 LONGITUDE³: ${ipqsInfo.longitude || 'N/A'}`);
     } else if (ipqsInfo) {
         ipqsResult.push(`⚠️ IPQS³: Error - ${ipqsInfo.message || 'Request failed'}`);
     }
