@@ -9,6 +9,13 @@ if (typeof $argument != 'undefined') {
 }
 const ipqsKey = arg['ipqs_key'];
 
+// New robust headers to mimic a standard browser request and bypass Cloudflare
+const customHeaders = {
+    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36',
+    'Accept': 'application/json, text/plain, */*',
+    'Accept-Language': 'en-US,en;q=0.5'
+};
+
 let title = ''
 let content = ''
 !(async () => {
@@ -107,9 +114,7 @@ async function getIpqsInfo(ip) {
     try {
         const res = await $.http.get({
             url: url,
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (iPhone CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1 Edg/109.0.0.0',
-            },
+            headers: customHeaders,
         });
         const body = String($.lodash_get(res, 'body'));
         if (body) {
@@ -129,9 +134,7 @@ async function getInfo() {
     try {
         const res = await $.http.get({
             url: `https://ip-score.com/fulljson`,
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (iPhone CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1 Edg/109.0.0.0',
-            },
+            headers: customHeaders,
         })
         let body = String($.lodash_get(res, 'body'))
         try {
