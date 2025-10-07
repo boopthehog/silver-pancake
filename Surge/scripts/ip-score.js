@@ -1,3 +1,4 @@
+//ipqs
 const $ = new Env('ip-score')
 
 $.isPanel = () => $.isSurge() && typeof $input != 'undefined' && $.lodash_get($input, 'purpose') === 'panel'
