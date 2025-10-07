@@ -1,4 +1,3 @@
-//ipqs
 const $ = new Env('ip-score')
 
 $.isPanel = () => $.isSurge() && typeof $input != 'undefined' && $.lodash_get($input, 'purpose') === 'panel'
@@ -34,7 +33,7 @@ let content = ''
     let isp = []
     const ispIcons = { isp: '🌐', org: '🏢', asn: '#️⃣' };
     ['isp', 'org', 'asn'].forEach(key => {
-        isp.push(`${ispIcons[key] || 'ℹ️'} ${key.toUpperCase()}: ${$.lodash_get(info, key) || '-'}`)
+        isp.push(`${ispIcons[key] || 'ℹ️'} ${key.toUpperCase()}: ${$.lodash_get(info, key) || ' - '}`)
     })
     isp = isp.length > 0 ? `${isp.join('\n')}\n` : ''
 
@@ -43,7 +42,7 @@ let content = ''
     ;
     ['country', 'region', 'city'].forEach(key => {
         if ($.lodash_get(info, `geoip1.${key}`)) {
-            geo1.push(`${geoIcons[key] || '📍'} ${key.toUpperCase()}¹: ${$.lodash_get(info, `geoip1.${key}`) || '-'}`)
+            geo1.push(`${geoIcons[key] || '📍'} ${key.toUpperCase()}¹: ${$.lodash_get(info, `geoip1.${key}`) || ' - '}`)
         }
     })
     geo1 = geo1.length > 0 ? `${geo1.join('\n')}\n` : ''
@@ -52,7 +51,7 @@ let content = ''
     ;
     ['country', 'region', 'city'].forEach(key => {
         if ($.lodash_get(info, `geoip2.${key}`)) {
-            geo2.push(`${geoIcons[key] || '📍'} ${key.toUpperCase()}²: ${$.lodash_get(info, `geoip2.${key}`) || '-'}`)
+            geo2.push(`${geoIcons[key] || '📍'} ${key.toUpperCase()}²: ${$.lodash_get(info, `geoip2.${key}`) || ' - '}`)
         }
     })
     geo2 = geo2.length > 0 ? `${geo2.join('\n')}\n` : ''
@@ -64,13 +63,15 @@ let content = ''
         ipqsResult.push(`🛡️ VPN³: ${ipqsInfo.vpn}`);
         ipqsResult.push(`🧅 TOR³: ${ipqsInfo.tor}`);
         ipqsResult.push(`🌐 ISP³: ${ipqsInfo.ISP || '-'}`);
-        ipqsResult.push(`🔌 TYPE³: ${ipqsInfo.connection_type || '-'}`);
+        ipqsResult.push(`#️⃣ ASN³: ${ipqsInfo.ASN || '-'}`);
+        ipqsResult.push(`🧭 LATITUDE³: ${ipqsInfo.latitude || 'N/A'}`);
+        ipqsResult.push(`🧭 LONGITUDE³: ${ipqsInfo.longitude || 'N/A'}`);
     } else if (ipqsInfo) {
         ipqsResult.push(`⚠️ IPQS³: Error - ${ipqsInfo.message || 'Request failed'}`);
     }
     const ipqsDetails = ipqsResult.length > 0 ? `${ipqsResult.join('\n')}\n` : '';
 
-    content = `${geo1}${geo2}${blacklists}${isp}${ipqsDetails}⏱️ Execution Time: ${new Date().toTimeString().split(' ')[0]}`
+    content = `${geo1}${geo2}${blacklists}${isp}\n${ipqsDetails}⏱️ Execution Time: ${new Date().toTimeString().split(' ')[0]}`
 
     if ($.isTile()) {
         await notify('IP 信息', '面板', '查询完成')
