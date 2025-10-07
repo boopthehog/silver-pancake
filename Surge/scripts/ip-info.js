@@ -1,3 +1,16 @@
+#!name=IP Info
+#!desc=IP-INFO Privacy
+
+[Script]
+# Panel
+ip-info-panel = type=generic,timeout=60,script-path=https://raw.githubusercontent.com/xream/scripts/main/surge/modules/network-info/ip-info.js,argument=icon=info.circle.fill&icon-color=#5d84f8
+
+[Panel]
+ip-info-panel = script-name=ip-info-panel,update-interval=-1
+```
+
+ip-info.js
+```
 const $ = new Env('ip-info')
 
 $.isPanel = () => $.isSurge() && typeof $input != 'undefined' && $.lodash_get($input, 'purpose') === 'panel'
@@ -13,7 +26,7 @@ let title = ''
 let content = ''
 !(async () => {
   if ($.isTile()) {
-    await notify('IP Info', 'Panel', 'Query')
+    await notify('IP Info', 'Panel', 'Starting lookup')
   }
   // let LAN_IP = ''
   // if (typeof $network !== 'undefined') {
@@ -51,9 +64,9 @@ let content = ''
     )
   })
   company = company.length > 0 ? `${company.join('\n')}\n` : ''
-  content = `${geo}${company}${privacy}执行时间: ${new Date().toTimeString().split(' ')[0]}`
+  content = `${geo}${company}${privacy}Time: ${new Date().toTimeString().split(' ')[0]}`
   if ($.isTile()) {
-    await notify('IP Info', 'Panel', '查询完成')
+    await notify('IP Info', 'Panel', 'Lookup complete')
   } else if (!$.isPanel()) {
     await notify('IP Info', title, content)
   }
@@ -72,7 +85,7 @@ let content = ''
     $.done(result)
   })
 
-// 通知
+// Notification
 async function notify(title, subt, desc, opts) {
   if ($.lodash_get(arg, 'notify')) {
     $.msg(title, subt, desc, opts)
