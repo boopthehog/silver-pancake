@@ -9,11 +9,12 @@ if (typeof $argument != 'undefined') {
 }
 const ipqsKey = arg['ipqs_key'];
 
-// New robust headers to mimic a standard browser request and bypass Cloudflare
+// Further refined headers for stability and to bypass bot detection
 const customHeaders = {
-    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36',
-    'Accept': 'application/json, text/plain, */*',
-    'Accept-Language': 'en-US,en;q=0.5'
+    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36',
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+    'Accept-Language': 'en-US,en;q=0.9',
+    'Cache-Control': 'no-cache'
 };
 
 let title = ''
@@ -49,7 +50,7 @@ let content = ''
     ;
     ['country', 'region', 'city'].forEach(key => {
         if ($.lodash_get(info, `geoip1.${key}`)) {
-            geo1.push(`${geoIcons[key] || '📍'} ${key.toUpperCase()}¹: ${$.lodash_get(info, `geoip1.${key}`) || ' - '}`)
+            geo1.push(`${geoIcons[key] || '📍'} ${key.toUpperCase()}: ${$.lodash_get(info, `geoip1.${key}`) || ' - '}`)
         }
     })
     geo1 = geo1.length > 0 ? `${geo1.join('\n')}\n` : ''
@@ -58,21 +59,21 @@ let content = ''
     ;
     ['country', 'region', 'city'].forEach(key => {
         if ($.lodash_get(info, `geoip2.${key}`)) {
-            geo2.push(`${geoIcons[key] || '📍'} ${key.toUpperCase()}²: ${$.lodash_get(info, `geoip2.${key}`) || ' - '}`)
+            geo2.push(`${geoIcons[key] || '📍'} ${key.toUpperCase()}: ${$.lodash_get(info, `geoip2.${key}`) || ' - '}`)
         }
     })
     geo2 = geo2.length > 0 ? `${geo2.join('\n')}\n` : ''
 
     let ipqsResult = [];
     if (ipqsInfo && ipqsInfo.success) {
-        ipqsResult.push(`🚦 FRAUD SCORE³: ${ipqsInfo.fraud_score !== undefined ? ipqsInfo.fraud_score : 'N/A'}`);
-        ipqsResult.push(`🎭 PROXY³: ${ipqsInfo.proxy}`);
-        ipqsResult.push(`🛡️ VPN³: ${ipqsInfo.vpn}`);
-        ipqsResult.push(`🧅 TOR³: ${ipqsInfo.tor}`);
-        ipqsResult.push(`🌐 ISP³: ${ipqsInfo.ISP || '-'}`);
-        ipqsResult.push(`#️⃣ ASN³: ${ipqsInfo.ASN || '-'}`);
-        ipqsResult.push(`🧭 LATITUDE³: ${ipqsInfo.latitude || 'N/A'}`);
-        ipqsResult.push(`🧭 LONGITUDE³: ${ipqsInfo.longitude || 'N/A'}`);
+        ipqsResult.push(`🚦 FRAUD SCORE: ${ipqsInfo.fraud_score !== undefined ? ipqsInfo.fraud_score : 'N/A'}`);
+        ipqsResult.push(`🎭 PROXY: ${ipqsInfo.proxy}`);
+        ipqsResult.push(`🛡️ VPN: ${ipqsInfo.vpn}`);
+        ipqsResult.push(`🧅 TOR: ${ipqsInfo.tor}`);
+        ipqsResult.push(`🌐 ISP: ${ipqsInfo.ISP || '-'}`);
+        ipqsResult.push(`#️⃣ ASN: ${ipqsInfo.ASN || '-'}`);
+        ipqsResult.push(`🧭 LATITUDE: ${ipqsInfo.latitude || 'N/A'}`);
+        ipqsResult.push(`🧭 LONGITUDE: ${ipqsInfo.longitude || 'N/A'}`);
     } else if (ipqsInfo) {
         ipqsResult.push(`⚠️ IPQS³: Error - ${ipqsInfo.message || 'Request failed'}`);
     }
@@ -115,10 +116,16 @@ async function getIpqsInfo(ip) {
         const res = await $.http.get({
             url: url,
             headers: customHeaders,
+            'binary-mode': true
         });
         const body = String($.lodash_get(res, 'body'));
         if (body) {
-            info = JSON.parse(body);
+            try {
+                info = JSON.parse(body);
+            } catch (e) {
+                $.logErr('IPQS: JSON.parse failed, likely Cloudflare.');
+                return { success: false, message: "Blocked by Security" };
+            }
         } else {
             throw new Error('IPQS API returned empty body');
         }
@@ -135,12 +142,15 @@ async function getInfo() {
         const res = await $.http.get({
             url: `https://ip-score.com/fulljson`,
             headers: customHeaders,
+            'binary-mode': true
         })
         let body = String($.lodash_get(res, 'body'))
         try {
-            body = JSON.parse(body)
-        } catch (e) {}
-        info = body
+            info = JSON.parse(body)
+        } catch (e) {
+            $.logErr('ip-score: JSON.parse failed, likely Cloudflare.');
+            return { ip: "Error", asn: "Blocked by Security" };
+        }
     } catch (e) {
         $.logErr(e)
         $.logErr($.toStr(e))
