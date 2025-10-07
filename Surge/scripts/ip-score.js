@@ -5,155 +5,147 @@ $.isTile = () => $.isStash() && typeof $script != 'undefined' && $.lodash_get($s
 
 let arg
 if (typeof $argument != 'undefined') {
-    arg = Object.fromEntries($argument.split('&').map(item => item.split('=')))
+        arg = Object.fromEntries($argument.split('&').map(item => item.split('=')))
 }
-const ipqsKey = arg['ipqs_key']; // New line to capture the key
+const ipqsKey = arg['ipqs_key'];
 
 let title = ''
 let content = ''
 !(async () => {
-    // First, get the primary info which includes the IP address
-    let info = await getInfo();
-    const ip = $.lodash_get(info, 'ip'); // Extract IP address
+        let [info] = await Promise.all([getInfo()]);
 
-    // Now, with the IP, get the IPQS info
-    let ipqsInfo = await getIpqsInfo(ip);
+        const ip = $.lodash_get(info, 'ip');
 
-    $.log(`ip-score.com data: ${$.toStr(info)}`);
-    $.log(`IPQS data: ${$.toStr(ipqsInfo)}`);
+        let ipqsInfo = await getIpqsInfo(ip);
 
-    title = `${ip || ' - '}`;
+        $.log(`ip-score.com data: ${$.toStr(info)}`);
+        $.log(`IPQS data: ${$.toStr(ipqsInfo)}`);
 
-    const blacklistsObj = $.lodash_get(info, 'blacklists') || {}
-    let blacklists = []
-    Object.keys(blacklistsObj).forEach(key => {
-        blacklists.push(`${key.toUpperCase()}: ${blacklistsObj[key]}`)
-    })
-    blacklists = blacklists.length > 0 ? `${blacklists.join('\n')}\n` : ''
+        title = `${ip || ' - '}`;
 
-    let isp = []
-    ;['isp', 'org', 'asn'].forEach(key => {
-        isp.push(`${key.toUpperCase()}: ${$.lodash_get(info, key) || ' - '}`)
-    })
-    isp = isp.length > 0 ? `${isp.join('\n')}\n` : ''
+        const blacklistsObj = $.lodash_get(info, 'blacklists') || {}
+        let blacklists = []
+        Object.keys(blacklistsObj).forEach(key => {
+                blacklists.push(`${key.toUpperCase()}: ${blacklistsObj[key]}`)
+        })
+        blacklists = blacklists.length > 0 ? `${blacklists.join('\n')}\n` : ''
 
-    let geo1 = []
-    ;['country', 'region', 'city'].forEach(key => {
-        if ($.lodash_get(info, `geoip1.${key}`)) {
-            geo1.push(`${key.toUpperCase()}¹: ${$.lodash_get(info, `geoip1.${key}`) || ' - '}`)
+        let isp = []
+        ;['isp', 'org', 'asn'].forEach(key => {
+                isp.push(`${key.toUpperCase()}: ${$.lodash_get(info, key) || ' - '}`)
+        })
+        isp = isp.length > 0 ? `${isp.join('\n')}\n` : ''
+
+        let geo1 = []
+        ;['country', 'region', 'city'].forEach(key => {
+                if ($.lodash_get(info, `geoip1.${key}`)) {
+                        geo1.push(`${key.toUpperCase()}¹: ${$.lodash_get(info, `geoip1.${key}`) || ' - '}`)
+                }
+        })
+        geo1 = geo1.length > 0 ? `${geo1.join('\n')}\n` : ''
+
+        let geo2 = []
+        ;['country', 'region', 'city'].forEach(key => {
+                if ($.lodash_get(info, `geoip2.${key}`)) {
+                        geo2.push(`${key.toUpperCase()}²: ${$.lodash_get(info, `geoip2.${key}`) || ' - '}`)
+                }
+        })
+        geo2 = geo2.length > 0 ? `${geo2.join('\n')}\n` : ''
+
+        let ipqsResult = [];
+        if (ipqsInfo && ipqsInfo.success) {
+                ipqsResult.push(`FRAUD SCORE³: ${ipqsInfo.fraud_score !== undefined ? ipqsInfo.fraud_score : 'N/A'}`);
+                ipqsResult.push(`PROXY³: ${ipqsInfo.proxy}`);
+                ipqsResult.push(`VPN³: ${ipqsInfo.vpn}`);
+                ipqsResult.push(`TOR³: ${ipqsInfo.tor}`);
+                ipqsResult.push(`ISP³: ${ipqsInfo.ISP || '-'}`);
+                ipqsResult.push(`TYPE³: ${ipqsInfo.connection_type || '-'}`);
+        } else if (ipqsInfo) {
+                ipqsResult.push(`IPQS³: Error - ${ipqsInfo.message || 'Request failed'}`);
         }
-    })
-    geo1 = geo1.length > 0 ? `${geo1.join('\n')}\n` : ''
+        const ipqsDetails = ipqsResult.length > 0 ? `${ipqsResult.join('\n')}\n` : '';
 
-    let geo2 = []
-    ;['country', 'region', 'city'].forEach(key => {
-        if ($.lodash_get(info, `geoip2.${key}`)) {
-            geo2.push(`${key.toUpperCase()}²: ${$.lodash_get(info, `geoip2.${key}`) || ' - '}`)
+        content = `${geo1}${geo2}${blacklists}${isp}${ipqsDetails}执行时间: ${new Date().toTimeString().split(' ')[0]}`
+
+        if ($.isTile()) {
+                await notify('IP 信息', '面板', '查询完成')
+        } else if (!$.isPanel()) {
+                await notify('IP 信息', title, content)
         }
-    })
-    geo2 = geo2.length > 0 ? `${geo2.join('\n')}\n` : ''
-
-    // NEW: Format the IPQS information for display
-    let ipqsResult = [];
-    if (ipqsInfo && ipqsInfo.success) {
-        ipqsResult.push(`FRAUD SCORE³: ${ipqsInfo.fraud_score !== undefined ? ipqsInfo.fraud_score : 'N/A'}`);
-        ipqsResult.push(`PROXY³: ${ipqsInfo.proxy}`);
-        ipqsResult.push(`VPN³: ${ipqsInfo.vpn}`);
-        ipqsResult.push(`TOR³: ${ipqsInfo.tor}`);
-        ipqsResult.push(`ISP³: ${ipqsInfo.ISP || '-'}`);
-        ipqsResult.push(`TYPE³: ${ipqsInfo.connection_type || '-'}`);
-    } else if (ipqsInfo) {
-        ipqsResult.push(`IPQS³: Error - ${ipqsInfo.message || 'Request failed'}`);
-    }
-    const ipqsDetails = ipqsResult.length > 0 ? `${ipqsResult.join('\n')}\n` : '';
-
-    content = `${geo1}${geo2}${blacklists}${isp}${ipqsDetails}执行时间: ${new Date().toTimeString().split(' ')[0]}`
-
-    if ($.isTile()) {
-        await notify('IP 信息', '面板', '查询完成')
-    } else if (!$.isPanel()) {
-        await notify('IP 信息', title, content)
-    }
 })()
-    .catch(async e => {
-        $.logErr(e)
-        $.logErr($.toStr(e))
-        const msg = `${$.lodash_get(e, 'message') || $.lodash_get(e, 'error') || e}`
-        title = `❌`
-        content = msg
-        await notify('IP 信息', title, content)
-    })
-    .finally(async () => {
-        const result = { title, content, ...arg }
-        $.log($.toStr(result))
-        $.done(result)
-    })
+        .catch(async e => {
+                $.logErr(e)
+                $.logErr($.toStr(e))
+                const msg = `${$.lodash_get(e, 'message') || $.lodash_get(e, 'error') || e}`
+                title = `❌ Error`
+                content = msg
+                await notify('IP 信息', title, content)
+        })
+        .finally(async () => {
+                const result = { title, content, ...arg }
+                $.log($.toStr(result))
+                $.done(result)
+        })
 
 async function getIpqsInfo(ip) {
-    if (!ipqsKey) {
-        $.log('IPQS key not provided in arguments, skipping lookup.');
-        return null;
-    }
-    if (!ip) {
-        $.log('IP not available for IPQS lookup.');
-        return null;
-    }
-
-    let info = {};
-    const url = `https://ipqualityscore.com/api/json/ip/${ipqsKey}/${ip}?strictness=1`;
-
-    try {
-        const res = await $.http.get({
-            url: url,
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (iPhone CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1 Edg/109.0.0.0',
-            },
-        });
-
-        const body = String($.lodash_get(res, 'body'));
-        if (body) {
-            info = JSON.parse(body);
-        } else {
-            throw new Error('IPQS API returned empty body');
+        if (!ipqsKey) {
+                $.log('IPQS key not provided in arguments, skipping lookup.');
+                return null;
         }
-    } catch (e) {
-        $.logErr(`IPQS request failed: ${e}`);
-        return { success: false, message: e.toString() };
-    }
-
-    return info;
+        if (!ip) {
+                $.log('IP not available for IPQS lookup.');
+                return null;
+        }
+        let info = {};
+        const url = `https://ipqualityscore.com/api/json/ip/${ipqsKey}/${ip}?strictness=1`;
+        try {
+                const res = await $.http.get({
+                        url: url,
+                        headers: {
+                                'User-Agent': 'Mozilla/5.0 (iPhone CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1 Edg/109.0.0.0',
+                        },
+                });
+                const body = String($.lodash_get(res, 'body'));
+                if (body) {
+                        info = JSON.parse(body);
+                } else {
+                        throw new Error('IPQS API returned empty body');
+                }
+        } catch (e) {
+                $.logErr(`IPQS request failed: ${e}`);
+                return { success: false, message: e.toString() };
+        }
+        return info;
 }
 
 async function getInfo() {
-    let info = {}
-
-    try {
-        const res = await $.http.get({
-            url: `https://ip-score.com/fulljson`,
-            headers: {
-                'User-Agent':
-                    'Mozilla/5.0 (iPhone CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1 Edg/109.0.0.0',
-            },
-        })
-        let body = String($.lodash_get(res, 'body'))
+        let info = {}
         try {
-            body = JSON.parse(body)
-        } catch (e) {}
-        info = body
-    } catch (e) {
-        $.logErr(e)
-        $.logErr($.toStr(e))
-    }
-
-    return info
+                const res = await $.http.get({
+                        url: `https://ip-score.com/fulljson`,
+                        headers: {
+                                'User-Agent':
+                                        'Mozilla/5.0 (iPhone CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1 Edg/109.0.0.0',
+                        },
+                })
+                let body = String($.lodash_get(res, 'body'))
+                try {
+                        body = JSON.parse(body)
+                } catch (e) {}
+                info = body
+        } catch (e) {
+                $.logErr(e)
+                $.logErr($.toStr(e))
+        }
+        return info
 }
 
 async function notify(title, subt, desc, opts) {
-    if ($.lodash_get(arg, 'notify')) {
-        $.msg(title, subt, desc, opts)
-    } else {
-        $.log('🔕', title, subt, desc, opts)
-    }
+        if ($.lodash_get(arg, 'notify')) {
+                $.msg(title, subt, desc, opts)
+        } else {
+                $.log('🔕', title, subt, desc, opts)
+        }
 }
 
 // prettier-ignore
