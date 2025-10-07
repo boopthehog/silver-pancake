@@ -3,7 +3,7 @@
 
 [Script]
 # Panel
-ip-score-panel = type=generic,timeout=60,script-path=https://raw.githubusercontent.com/boopthehog/silver-pancake/main/Surge/scripts/ip-score.js,argument=icon=lifepreserver.fill&icon-color=#5d84f8ipqs_key=YF36zITmahakuD3VDJozrUXZYe24yJ4U
+ip-score-panel = type=generic,timeout=60,script-path=https://raw.githubusercontent.com/boopthehog/silver-pancake/main/Surge/scripts/ip-score.js,argument=icon=lifepreserver.fill&icon-color=#5d84f8ipqs_key=YYF36zITmahakuD3VDJozrUXZYe2 
 
 [Panel]
 ip-score-panel = script-name=ip-score-panel,update-interval=-1
